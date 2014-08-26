@@ -1,0 +1,124 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="se.sandos.android.flickrcheck.FlickrFragment" >
+
+    <TextView
+        android:id="@+id/hello"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/code"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/hello"
+        android:layout_toLeftOf="@+id/statusText"
+        android:layout_toRightOf="@+id/hello"
+        android:ems="10"
+        android:inputType="text" >
+
+        <requestFocus />
+    </EditText>
+
+    <Button
+        android:id="@+id/tokenBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/hello"
+        android:text="@string/codebtn" />
+
+    <Button
+        android:id="@+id/clearBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/tokenBtn"
+        android:layout_below="@+id/statusText"
+        android:layout_alignParentRight="true"
+        android:text="@string/ClearBtn" />
+
+    <ImageView
+        android:id="@+id/remoteImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/tokenBtn"
+        android:layout_below="@+id/localImage"
+        android:adjustViewBounds="true"
+        android:maxHeight="150dp"
+        android:scaleType="fitCenter" />
+
+    <VideoView
+        android:id="@+id/remoteVideo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/remoteImage"
+        android:layout_alignTop="@+id/remoteImage"
+        android:layout_alignBottom="@+id/remoteImage"
+        android:layout_alignRight="@+id/remoteImage"
+        android:adjustViewBounds="true"
+        android:maxHeight="150dp"
+        android:scaleType="fitCenter" />
+    
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/hello"
+        android:layout_alignParentRight="true"
+        android:text="status"
+        android:textSize="14sp" />
+
+    <ImageView
+        android:id="@+id/localImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/remoteImage"
+        android:layout_below="@+id/imageSize"
+        android:adjustViewBounds="true"
+        android:maxHeight="150dp"
+        android:scaleType="fitCenter" />
+    
+    <VideoView
+        android:id="@+id/localVideo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/localImage"
+        android:layout_alignTop="@+id/localImage"
+        android:layout_alignBottom="@+id/localImage"
+        android:layout_alignRight="@+id/localImage"
+        android:adjustViewBounds="true"
+        android:maxHeight="150dp"
+        android:scaleType="fitCenter" />
+    
+
+    <TextView
+        android:id="@+id/imageSize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/deleteBtn"
+        android:layout_toRightOf="@+id/deleteBtn" />
+
+    <Button
+        android:id="@+id/deleteBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/tokenBtn"
+        android:layout_below="@+id/tokenBtn"
+        android:text="Delete" />
+
+    <Button
+        android:id="@+id/skipBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/imageSize"
+        android:layout_alignBottom="@+id/imageSize"
+        android:text="Skip" />
+
+</RelativeLayout>
