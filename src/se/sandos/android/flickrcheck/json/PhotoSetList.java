@@ -1,6 +1,5 @@
 package se.sandos.android.flickrcheck.json;
 
-import java.util.Date;
 import java.util.List;
 
 public class PhotoSetList {
