@@ -11,6 +11,7 @@ import java.util.Set;
 import se.sandos.android.flickrcheck.json.PhotoInfo;
 import se.sandos.android.flickrcheck.json.PhotoInfo.Photo.Tag;
 import se.sandos.android.flickrcheck.json.PhotoSearch.Photos;
+import se.sandos.android.flickrcheck.json.PhotoSearch.Photos.Photo;
 
 import android.app.Fragment;
 import android.content.Intent;
@@ -188,16 +189,21 @@ public class FlickrFragment extends Fragment {
 						Photos search = api.search(n.substring(0, n.length()-4));
 						digestMatch = false;
 						if(search.getTotal() > 0) {
-							PhotoInfo info = api.getPhotoInfo(search.photo.get(0).id);
-							
-							String sha1remote = null;
-							for(Tag g : info.photo.tags.tag) {
-								if(g.raw.startsWith("file:md5sum=")) {
-									sha1remote = g.raw.substring(12, g.raw.length());
+							String foundSha1 = "";
+							for(Photo ph : search.photo) {
+								PhotoInfo info = api.getPhotoInfo(ph.id);
+								
+								for(Tag g : info.photo.tags.tag) {
+									if(g.raw.startsWith("file:md5sum=")) {
+										if(foundSha1 != null) {
+											Log.w(MainActivity.LOG_TAG, "Found more than one SHA1");
+										}
+										foundSha1 = g.raw.substring(12, g.raw.length());
+									}
 								}
 							}
-							final String remotesha = sha1remote;
-							Log.w("majs", "Digest stuff " + sha1remote + "|" + digest);
+							final String remotesha = foundSha1;
+							Log.w("majs", "Digest stuff " + remotesha + "|" + digest);
 							
 							digest = null;
 							Thread digestThread = new Thread(new Runnable() {
@@ -216,7 +222,7 @@ public class FlickrFragment extends Fragment {
 										}
 										byte[] sha1 = md.digest();
 										Log.w("majs", "done hashing");
-										FetchNextPhoto.this.digest = convertToHex(sha1);
+										digest = convertToHex(sha1);
 										digestMatch = remotesha.equals(digest);
 										if(digestMatch) {
 											getActivity().runOnUiThread(new Runnable() {
