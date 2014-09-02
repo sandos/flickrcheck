@@ -49,6 +49,10 @@ public class FlickrFragment extends Fragment {
 	
 	private View rootView;
 	
+	public boolean isVideos() {
+		return videos;
+	}
+
 	private boolean videos = false;
 	
 	private VideoView localVideo;
@@ -507,5 +511,14 @@ public class FlickrFragment extends Fragment {
 
 
 		return rootView;
+	}
+
+	public boolean toggleVideo() {
+		if(videos) {
+			videos = false;
+		} else {
+			videos = true;
+		}
+		return videos;
 	}
 }

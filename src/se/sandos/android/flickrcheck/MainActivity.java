@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
+import android.widget.Button;
 
 public class MainActivity extends Activity {
 	public static final String LOG_TAG = "majs";
@@ -35,6 +35,21 @@ public class MainActivity extends Activity {
 	}
 
 	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		MenuItem mi = menu.findItem(R.id.video);
+
+		if(flickr != null) {
+			if(flickr.isVideos()) {
+				mi.setTitle("VIDEOS");
+			} else {
+				mi.setTitle("PHOTOS");
+			}
+		}
+		
+		return true;
+	}
+	
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
@@ -45,14 +60,21 @@ public class MainActivity extends Activity {
 		}
 		
 		if(id == R.id.video) {
-			Log.w(LOG_TAG, "Selected " + item);
-			if(flickr != null) {
-				flickr.setVideo(true);
-			} else {
+			Log.w(LOG_TAG, "Selected " + item + "|" + flickr);
+			
+			if(flickr == null) {
 				flickr = (FlickrFragment) getFragmentManager().findFragmentByTag("flickr");
-				if(flickr != null) {
-					flickr.setVideo(true);
-				}
+			}
+			
+			if(flickr != null) {
+				boolean toggleVideo = flickr.toggleVideo();
+				Log.w(LOG_TAG, "Toggle is " + toggleVideo + "|" + flickr);
+//				if(toggleVideo) {
+//					item.setTitle("Videos");
+//				} else {
+//					item.setTitle("Photos");
+//				}
+				invalidateOptionsMenu();
 			}
 		}
 		
