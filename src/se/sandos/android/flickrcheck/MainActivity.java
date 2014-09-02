@@ -1,8 +1,7 @@
 package se.sandos.android.flickrcheck;
 
 
-import com.example.checker.R;
-
+import se.sandos.flickrcheck.R;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;

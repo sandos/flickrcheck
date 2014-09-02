@@ -12,7 +12,7 @@ import se.sandos.android.flickrcheck.json.PhotoInfo;
 import se.sandos.android.flickrcheck.json.PhotoInfo.Photo.Tag;
 import se.sandos.android.flickrcheck.json.PhotoSearch.Photos;
 import se.sandos.android.flickrcheck.json.PhotoSearch.Photos.Photo;
-
+import se.sandos.flickrcheck.R;
 import android.app.Fragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -34,8 +34,6 @@ import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.VideoView;
-
-import com.example.checker.R;
 
 public class FlickrFragment extends Fragment {
 	
