@@ -116,7 +116,7 @@ public class FlickrApi {
 	}
 	
 	public PhotoSets getPhotoSets() throws IOException, OAuthMessageSignerException, OAuthExpectationFailedException, OAuthCommunicationException {
-		URL url = new URL("https://api.flickr.com/services/rest/?method=flickr.photosets.getList&format=json&api_key=a03761049a0bfcd06fecfc3df77d553e");
+		URL url = new URL("https://api.flickr.com/services/rest/?method=flickr.photosets.getList&format=json&api_key=" + API_KEY);
 		URLConnection conn = url.openConnection();
 		sign(conn);
 
@@ -151,7 +151,7 @@ public class FlickrApi {
 	}
 	
 	public Photos search(String text) throws IOException, OAuthMessageSignerException, OAuthExpectationFailedException, OAuthCommunicationException {
-		String u = "https://api.flickr.com/services/rest/?method=flickr.photos.search&format=json&api_key=a03761049a0bfcd06fecfc3df77d553e&user_id=me";
+		String u = "https://api.flickr.com/services/rest/?method=flickr.photos.search&format=json&api_key=" + API_KEY + "&user_id=me";
 		if(text != null && !text.isEmpty()) {
 			u += "&text=" + text;
 		}
