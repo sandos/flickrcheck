@@ -385,7 +385,7 @@ public class FlickrFragment extends Fragment {
 		
 		codeField = (EditText) rootView.findViewById(R.id.code);
 		
-		Button button = (Button) rootView.findViewById(R.id.tokenBtn);
+		Button useCodeBtn = (Button) rootView.findViewById(R.id.tokenBtn);
 
 		Button clear = (Button) rootView.findViewById(R.id.clearBtn);
 		clear.setOnClickListener(new OnClickListener() {
@@ -430,7 +430,7 @@ public class FlickrFragment extends Fragment {
 		
 		SharedPreferences prefs = getActivity().getPreferences(0);
 
-		button.setOnClickListener(new OnClickListener() {
+		useCodeBtn.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				AsyncTask<String, Integer, String> att = new AsyncTask<String, Integer, String>(){
@@ -503,7 +503,7 @@ public class FlickrFragment extends Fragment {
 			at.execute("");
 		} else {
 			setStatus("Tokens exist");
-			button.setVisibility(Button.GONE);
+			useCodeBtn.setVisibility(Button.GONE);
 			codeField.setVisibility(EditText.GONE);
 			api.readTokens(prefs);
 			att.execute("");
