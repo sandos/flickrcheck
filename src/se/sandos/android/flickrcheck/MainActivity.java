@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 
 public class MainActivity extends Activity {
 	public static final String LOG_TAG = "majs";
@@ -25,6 +24,19 @@ public class MainActivity extends Activity {
 					.add(R.id.container, new FlickrFragment(), "flickr").commit();
 		}
 		
+		getFragmentManager().executePendingTransactions();
+		flickr = (FlickrFragment) getFragmentManager().findFragmentByTag("flickr");
+		
+		Intent intent = getIntent();
+		Uri data = intent.getData();
+		if(intent.getAction().equals("android.intent.action.VIEW")) {
+			if(data == null) {
+				Log.w(LOG_TAG, "Failed to find any data in intent for oauth: " + intent);
+				return;
+			}
+			Log.w(LOG_TAG, "Got data: " + data.getQueryParameter("oauth_token") + "|" + data.getQueryParameter("oauth_verifier") + " " + data);
+			flickr.gotTokens(data.getQueryParameter("oauth_token"), data.getQueryParameter("oauth_verifier"));
+		}
 	}
 	
 	@Override

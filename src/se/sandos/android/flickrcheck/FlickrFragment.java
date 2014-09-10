@@ -49,10 +49,6 @@ public class FlickrFragment extends Fragment {
 	
 	private View rootView;
 	
-	public boolean isVideos() {
-		return videos;
-	}
-
 	private boolean videos = false;
 	
 	private VideoView localVideo;
@@ -71,6 +67,14 @@ public class FlickrFragment extends Fragment {
 	
 	public void setVideo(boolean video) {
 		videos = video;
+	}
+	
+	public boolean isVideos() {
+		return videos;
+	}
+	
+	public FlickrApi getApi() {
+		return api;
 	}
 	
     private static String convertToHex(byte[] data) {
@@ -121,6 +125,7 @@ public class FlickrFragment extends Fragment {
 						if(!skipped.contains(f) && f.getName().endsWith(ending) && biggestSize < f.length()) {
 							biggestFile = f;
 							biggestSize = f.length();
+							Log.w(MainActivity.LOG_TAG, "New biggest file: " + f.getName() + "|" + f.length());
 						}
 					}
 
@@ -513,6 +518,13 @@ public class FlickrFragment extends Fragment {
 		return rootView;
 	}
 
+	public void gotTokens(String accessToken, String tokenSecret) {
+		api.setTokens(accessToken, tokenSecret);
+		
+		setStatus("Stored tokens");
+		api.storeTokens(getActivity().getPreferences(0));
+	}
+	
 	public boolean toggleVideo() {
 		if(videos) {
 			videos = false;

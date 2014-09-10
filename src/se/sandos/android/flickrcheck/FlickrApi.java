@@ -33,7 +33,7 @@ import android.util.Log;
 import com.fasterxml.jackson.jr.ob.JSON;
 
 public class FlickrApi {
-	private static final String API_KEY = "a03761049a0bfcd06fecfc3df77d553e";
+	private static final String API_KEY    = "a03761049a0bfcd06fecfc3df77d553e";
 	private static final String API_SECRET = "3d87a7efc4232623";
 	
 	private OAuthProvider provider;
@@ -61,7 +61,7 @@ public class FlickrApi {
 	}
 	
 	public Intent login() throws OAuthMessageSignerException, OAuthNotAuthorizedException, OAuthExpectationFailedException, OAuthCommunicationException {
-		String authUrl = provider.retrieveRequestToken(oac, OAuth.OUT_OF_BAND);
+		String authUrl = provider.retrieveRequestToken(oac, "flickrcheck://flickrcheck.com");
 		Log.w(LOG_TAG, "got auth URL: " + authUrl);
 		Intent i = new Intent(Intent.ACTION_VIEW);
 		i.setData(Uri.parse(authUrl + "&perms=write"));
@@ -93,8 +93,13 @@ public class FlickrApi {
 	}
 	
 	public boolean hasTokens(SharedPreferences prefs) {
-		return prefs.contains(FULLNAME) && prefs.contains(USER_NSID) && prefs.contains(USERNAME) &&
-				prefs.contains(ACCESS_TOKEN) && prefs.contains(TOKEN_SECRET);
+//		return prefs.contains(FULLNAME) && prefs.contains(USER_NSID) && prefs.contains(USERNAME) &&
+//				prefs.contains(ACCESS_TOKEN) && prefs.contains(TOKEN_SECRET);
+		return prefs.contains(ACCESS_TOKEN) && prefs.contains(TOKEN_SECRET);
+	}
+	
+	public void setTokens(String accessToken, String tokenSecret) {
+		oac.setTokenWithSecret(accessToken, tokenSecret);
 	}
 	
 	public void readTokens(SharedPreferences prefs) {
