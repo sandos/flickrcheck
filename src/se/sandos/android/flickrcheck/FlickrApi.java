@@ -24,6 +24,7 @@ import se.sandos.android.flickrcheck.json.PhotoSetList;
 import se.sandos.android.flickrcheck.json.PhotoSetList.PhotoSets;
 import se.sandos.android.flickrcheck.json.Sizes;
 import se.sandos.android.flickrcheck.json.Sizes.Size.SizeLine;
+import se.sandos.android.flickrcheck.json.Stat;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -31,6 +32,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.fasterxml.jackson.jr.ob.JSON;
+import com.fasterxml.jackson.jr.ob.JSONObjectException;
 
 public class FlickrApi {
 	private static final String API_KEY    = "a03761049a0bfcd06fecfc3df77d553e";
@@ -51,6 +53,7 @@ public class FlickrApi {
 	private String user_nsid;
 	private String fullname;
 	
+	private boolean invalidTokens = false;
 	
 	public FlickrApi() {
         oac = new DefaultOAuthConsumer(API_KEY, API_SECRET);
@@ -155,6 +158,29 @@ public class FlickrApi {
 		return sizeLines.get("Mobile MP4").source;
 	}
 	
+	private boolean success(StringBuffer sb) throws JSONObjectException, IOException {
+		try {
+			Stat res = JSON.std.beanFrom(Stat.class, sb.toString().substring(14, sb.length()-1));
+			
+			if(res.stat.equals("fail")) {
+				if(res.code == 98) {
+					invalidTokens = true;
+				}
+				return false;
+			}
+			
+			Log.w(LOG_TAG, "Status code: " + res.stat + "|" + res.code + "|" + res.message);
+			
+			return true;
+		} catch(Throwable e) {
+			return true;
+		}
+	}
+	
+	public boolean invalidTokens() {
+		return invalidTokens;
+	}
+	
 	public Photos search(String text) throws IOException, OAuthMessageSignerException, OAuthExpectationFailedException, OAuthCommunicationException {
 		String u = "https://api.flickr.com/services/rest/?method=flickr.photos.search&format=json&api_key=" + API_KEY + "&user_id=me";
 		if(text != null && !text.isEmpty()) {
@@ -165,6 +191,12 @@ public class FlickrApi {
 		sign(conn);
 
 		StringBuffer input = logCall(conn, false);
+		
+		//Failure looks like:
+		//jsonFlickrApi({"stat":"fail", "code":98, "message":"Invalid auth token"})
+		if(!success(input)) {
+			return null;
+		}
 		
 		PhotoSearch search = JSON.std.beanFrom(PhotoSearch.class, input.toString().substring(14, input.length()-1));
 

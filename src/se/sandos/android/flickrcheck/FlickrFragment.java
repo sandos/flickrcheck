@@ -29,7 +29,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.TextView;
@@ -41,7 +40,6 @@ public class FlickrFragment extends Fragment {
 	
 	private TextView status;
 	private TextView size;
-	private EditText codeField;
 	
 	private File currentFile;
 	
@@ -55,6 +53,36 @@ public class FlickrFragment extends Fragment {
 	private VideoView remoteVideo;
 
 	private String location;
+	
+	final AsyncTask<String, Integer, String> at = new AsyncTask<String, Integer, String>(){
+		@Override
+		protected String doInBackground(String... params) {
+			Log.w(MainActivity.LOG_TAG, "Getting tokens");
+			Intent login;
+			try {
+				setStatus("Begin");
+				login = api.login();
+				
+				if(login != null) {
+					setStatus("Sent user");
+					startActivity(login);
+				} else {
+					setStatus("NULL login?");
+				}
+			} catch (Exception e) {
+				Log.w(MainActivity.LOG_TAG, e);
+				setStatus("Failed login");
+			}
+			
+			
+	        return "<No>";
+		}
+		
+		protected void onPostExecute(String result) {
+			TextView hello = (TextView) rootView.findViewById(R.id.hello);
+			hello.setText(result);
+		}
+	};
 	
 	public FlickrFragment() {
 		api = new FlickrApi();
@@ -193,9 +221,14 @@ public class FlickrFragment extends Fragment {
 							}
 						});
 						String n = biggestFile.getName();
+						if(api == null) {
+							setStatus("API null");
+							return "";
+						}
+						
 						Photos search = api.search(n.substring(0, n.length()-4));
 						digestMatch = false;
-						if(search.getTotal() > 0) {
+						if(search != null && search.getTotal() > 0) {
 							String foundSha1 = "";
 							for(Photo ph : search.photo) {
 								PhotoInfo info = api.getPhotoInfo(ph.id);
@@ -307,7 +340,13 @@ public class FlickrFragment extends Fragment {
 								});
 							}
 						} else {
-							setStatus("Found none");
+							if(api.invalidTokens()) {
+								setStatus("Tokens invalid");
+								at.execute("");
+							} else {
+								setStatus("Found none");
+							}
+							
 						}
 					} else {
 						currentFile = null;
@@ -388,10 +427,6 @@ public class FlickrFragment extends Fragment {
 		size = (TextView) rootView.findViewById(R.id.imageSize);
 		size.setText("0B");
 		
-		codeField = (EditText) rootView.findViewById(R.id.code);
-		
-		Button useCodeBtn = (Button) rootView.findViewById(R.id.tokenBtn);
-
 		Button clear = (Button) rootView.findViewById(R.id.clearBtn);
 		clear.setOnClickListener(new OnClickListener() {
 			@Override
@@ -403,67 +438,10 @@ public class FlickrFragment extends Fragment {
 			}
 		});
 		
-		AsyncTask<String, Integer, String> at = new AsyncTask<String, Integer, String>(){
-			@Override
-			protected String doInBackground(String... params) {
 
-				Intent login;
-				try {
-					setStatus("Begin");
-					login = api.login();
-					
-					if(login != null) {
-						setStatus("Sent user");
-						startActivity(login);
-					} else {
-						setStatus("NULL login?");
-					}
-				} catch (Exception e) {
-					Log.w(MainActivity.LOG_TAG, e);
-					setStatus("Failed login");
-				}
-				
-				
-		        return "<No>";
-			}
-			
-			protected void onPostExecute(String result) {
-				TextView hello = (TextView) rootView.findViewById(R.id.hello);
-				hello.setText(result);
-			}
-		};
 		
 		SharedPreferences prefs = getActivity().getPreferences(0);
 
-		useCodeBtn.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				AsyncTask<String, Integer, String> att = new AsyncTask<String, Integer, String>(){
-					@Override
-					protected String doInBackground(String... params) {
-						try {
-							setStatus("Getting token");
-							api.retrieveAccessToken(params[0]);
-							
-							SharedPreferences prefs = getActivity().getPreferences(0);
-							setStatus("Got token");
-
-							api.storeTokens(prefs);
-							setStatus("Tokens stored");
-						} catch (Exception e) {
-							setStatus("Problem logging in: " + e.getMessage());
-							Log.w("majs", e);
-						}
-						
-						return "";
-					}
-				};
-				
-				TextView tv = (TextView) rootView.findViewById(R.id.code);
-				att.execute(tv.getText().toString());
-			}
-		});
-		
 		final AsyncTask<String, Integer, String> att = new FetchNextPhoto();
 		
 		Button deleteBtn = (Button) rootView.findViewById(R.id.deleteBtn);
@@ -489,6 +467,10 @@ public class FlickrFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				if(currentFile != null) {
+					if(api != null && api.invalidTokens()) {
+						at.execute("");
+						return;
+					}
 					setStatus("Skipped");
 					skipped.add(currentFile);
 
@@ -502,14 +484,11 @@ public class FlickrFragment extends Fragment {
 			}
 		});
 		
-		
-		if(!api.hasTokens(prefs)) {
+		if(!api.hasTokens(prefs) || api.invalidTokens()) {
 			setStatus("Need login");
 			at.execute("");
 		} else {
 			setStatus("Tokens exist");
-			useCodeBtn.setVisibility(Button.GONE);
-			codeField.setVisibility(EditText.GONE);
 			api.readTokens(prefs);
 			att.execute("");
 		}
