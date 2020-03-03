@@ -155,7 +155,7 @@ public class FlickrApi {
 //			Log.w(LOG_TAG, key + "|" + sizeLines.get(key).source);
 //		}
 		
-		return sizeLines.get("Mobile MP4").source;
+		return sizeLines.get("Site MP4").source;
 	}
 	
 	private boolean success(StringBuffer sb) throws JSONObjectException, IOException {

@@ -20,6 +20,7 @@ import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -129,11 +130,16 @@ public class FlickrFragment extends Fragment {
 			try {
 				File biggestFolder = null;
 				if(location == null) {
-					int biggest = -1;
+					long biggest = -1;
 					for (File f : getAlbumStorageDir().listFiles()) {
-						Log.w(MainActivity.LOG_TAG, "Number of files in " + f + " is " + f.listFiles().length);
-						if(f.listFiles().length > biggest) {
-							biggest = f.listFiles().length;
+						long totSize = 0;
+						for(File ff : f.listFiles())
+						{
+							totSize += ff.length();
+						}
+						Log.w(MainActivity.LOG_TAG, "Size of files in " + f + " is " + totSize);
+						if(totSize > biggest) {
+							biggest = totSize;
 							biggestFolder = f;
 						}
 					}
@@ -200,7 +206,7 @@ public class FlickrFragment extends Fragment {
 
 									VideoView video = (VideoView) rootView.findViewById(R.id.localVideo);
 									video.setVisibility(VideoView.VISIBLE);
-									video.setVideoPath(f.getAbsolutePath());
+									video.setVideoPath(Uri.fromFile(f).toString());
 									
 									MediaController mc = new MediaController(getActivity().getApplicationContext());
 									mc.setMediaPlayer(video);
@@ -294,14 +300,14 @@ public class FlickrFragment extends Fragment {
 							digestThread.setName("MD5 thread");
 							digestThread.setPriority(Thread.MIN_PRIORITY);
 							digestThread.start();
-							
+
 							setStatus("Search found " + search.getTotal());
 							URL u = new URL(search.photo.get(0).baseUrl("_n"));
-							remote = BitmapFactory.decodeStream(u.openConnection().getInputStream());
-							
+
 							if(videos) {
 								final String videoUrl = api.getVideoUrl(search.photo.get(0).getId());
-								
+								Log.w("majs", "VIDEO URL: " + videoUrl);
+
 								getActivity().runOnUiThread(new Runnable() {
 									@Override
 									public void run() {
@@ -339,14 +345,29 @@ public class FlickrFragment extends Fragment {
 									}
 								});
 							}
+							else
+							{
+								remote = BitmapFactory.decodeStream(u.openConnection().getInputStream());
+							}
 						} else {
 							if(api.invalidTokens()) {
 								setStatus("Tokens invalid");
 								at.execute("");
 							} else {
 								setStatus("Found none");
+
+								if(videos) {
+									getActivity().runOnUiThread(new Runnable() {
+										@Override
+										public void run() {
+											if(localVideo != null) {
+												localVideo.start();
+											}
+										}
+									});
+								}
 							}
-							
+
 						}
 					} else {
 						currentFile = null;
@@ -356,7 +377,8 @@ public class FlickrFragment extends Fragment {
 				}
 				
 			} catch (Exception e) {
-				Log.w("majs", e);
+				Log.w("majs", "asdasd");
+				Log.w("majs", e.getMessage());
 			} 
 			return null;
 		}

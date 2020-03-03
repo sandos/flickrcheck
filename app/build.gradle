@@ -1,0 +1,29 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "29.0.3"
+
+    defaultConfig {
+        applicationId "se.sandos.flickrcheck"
+        targetSdkVersion 20
+        minSdkVersion 17
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+dependencies {
+    /*compile 'com.android.support:support-v4:23.4.0'*/
+    implementation files('libs/jackson-core-2.4.2-sources.jar')
+    implementation files('libs/jackson-core-2.4.2.jar')
+    implementation files('libs/jackson-jr-objects-2.4.2-sources.jar')
+    implementation files('libs/jackson-jr-objects-2.4.2.jar')
+    implementation files('libs/signpost-commonshttp4-1.2.1.2.jar')
+    implementation files('libs/signpost-core-1.2.1.2.jar')
+}
