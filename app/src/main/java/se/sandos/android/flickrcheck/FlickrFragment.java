@@ -416,11 +416,11 @@ public class FlickrFragment extends Fragment {
 					if(biggestSize<1024) {
 						size.setText("" + biggestSize +" B");
 					} else if(biggestSize<1024*1024) {
-						size.setText("" + (biggestSize/1024) + "KiB");
+						size.setText("" + (biggestSize/1024) + " KiB");
 					} else if(biggestSize<1024*1024*1024) {
-						size.setText("" + (biggestSize/(1024*1024)) + "MiB");
+						size.setText("" + (biggestSize/(1024*1024)) + " MiB");
 					} else if(biggestSize<1024*1024*1024*1024) {
-						size.setText("" + (biggestSize/(1024*1024*1024)) + "GiB");
+						size.setText("" + (biggestSize/(1024*1024*1024)) + " GiB");
 					}
 				}
 			});
@@ -527,11 +527,7 @@ public class FlickrFragment extends Fragment {
 	}
 	
 	public boolean toggleVideo() {
-		if(videos) {
-			videos = false;
-		} else {
-			videos = true;
-		}
+		videos = !videos;
 		return videos;
 	}
 }
