@@ -466,7 +466,7 @@ public class FlickrFragment extends Fragment {
 
 		final AsyncTask<String, Integer, String> att = new FetchNextPhoto();
 		
-		Button deleteBtn = (Button) rootView.findViewById(R.id.deleteBtn);
+		final Button deleteBtn = (Button) rootView.findViewById(R.id.deleteBtn);
 		deleteBtn.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -480,6 +480,7 @@ public class FlickrFragment extends Fragment {
 					}
 					clearImages(rootView);
 					new FetchNextPhoto().execute("");
+					deleteBtn.setBackgroundResource(android.R.drawable.btn_default);
 				}
 			}
 		});
@@ -500,7 +501,6 @@ public class FlickrFragment extends Fragment {
 					
 					Button deleteBtn = (Button) rootView.findViewById(R.id.deleteBtn);
 					deleteBtn.setBackgroundResource(android.R.drawable.btn_default);
-					
 					new FetchNextPhoto().execute("");
 				}
 			}
