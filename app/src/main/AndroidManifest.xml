@@ -25,6 +25,14 @@
                 <data android:scheme="flickrcheck"></data>
            </intent-filter>
         </activity>
-    </application>
+        <activity
+            android:name="se.sandos.android.flickrcheck.Filter"
+            android:label="Filter" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"></action>
+                <category android:name="android.intent.category.BROWSABLE"></category>
+                <data android:scheme="flickrcheck"></data>
+            </intent-filter>
+        </activity>    </application>
 
 </manifest>

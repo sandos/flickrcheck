@@ -21,7 +21,7 @@
         android:layout_alignParentRight="true"
         android:layout_below="@+id/hello"
         android:text="@string/ClearBtn" />
-
+        
     <ImageView
         android:id="@+id/remoteImage"
         android:layout_width="match_parent"
@@ -95,5 +95,13 @@
         android:layout_alignBottom="@+id/imageSize"
         android:layout_toRightOf="@+id/imageSize"
         android:text="Skip" />
+
+    <Button
+        android:id="@+id/filterButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/skipBtn"
+        android:layout_toRightOf="@+id/skipBtn"
+        android:text="Filter" />
 
 </RelativeLayout>

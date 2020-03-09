@@ -459,9 +459,7 @@ public class FlickrFragment extends Fragment {
 				edit.commit();
 			}
 		});
-		
 
-		
 		SharedPreferences prefs = getActivity().getPreferences(0);
 
 		final AsyncTask<String, Integer, String> att = new FetchNextPhoto();
@@ -514,6 +512,16 @@ public class FlickrFragment extends Fragment {
 			api.readTokens(prefs);
 			att.execute("");
 		}
+
+		Button filter = (Button) rootView.findViewById(R.id.filterButton);
+		filter.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent myIntent = new Intent(getActivity(), Filter.class);
+				//myIntent.putExtra("key", value); //Optional parameters
+				startActivity(myIntent);
+			}
+		});
 
 
 		return rootView;

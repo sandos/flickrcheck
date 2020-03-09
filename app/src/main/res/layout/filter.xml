@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/minAge"
+        android:layout_width="match_parent"
+        android:layout_height="53dp"
+        android:text="Min age"
+        android:textSize="20sp" />
+
+    <EditText
+        android:id="@+id/filterLen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:text="6"
+        android:textSize="20sp" />
+
+    <RadioGroup
+        android:id="@+id/unitgroup"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <RadioButton
+            android:id="@+id/radioButtonYears"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Years" />
+
+        <RadioButton
+            android:id="@+id/radioButtonMonths"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Months" />
+
+        <RadioButton
+            android:id="@+id/radioButtonWeeks"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Weeks" />
+
+        <RadioButton
+            android:id="@+id/radioButtonDays"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Days" />
+    </RadioGroup>
+
+</LinearLayout>
