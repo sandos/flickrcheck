@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import se.sandos.flickrcheck.R;
@@ -25,6 +26,15 @@ public class Filter extends Activity {
         {
             EditText et = (EditText) findViewById(android.R.id.content).getRootView().findViewById(R.id.filterLen);
             et.setText(mPrefs.getString("FILTER_LEN", "6"));
+
+            String unit = mPrefs.getString("FILTER_UNIT", "Weeks");
+            RadioGroup grp = (RadioGroup) findViewById(android.R.id.content).getRootView().findViewById(R.id.unitgroup);
+            switch(unit)
+            {
+                case "Weeks": grp.check(R.id.radioButtonWeeks); break;
+                case "Years": grp.check(R.id.radioButtonYears); break;
+                case "Days": grp.check(R.id.radioButtonDays); break;
+            }
         }
     }
 
