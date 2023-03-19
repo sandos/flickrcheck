@@ -92,15 +92,40 @@ public class MainActivity extends Activity {
 		
 		if(id == R.id.location) {
 			Intent intent = new Intent("org.openintents.action.PICK_DIRECTORY");
-			startActivityForResult(intent, 1);
+			try {
+				startActivityForResult(intent, 1);
+			} catch(Exception e) {
+				Log.w(LOG_TAG, "Directory picking failed!|");
+			}
 		}
 		
 		return super.onOptionsItemSelected(item);
 	}
 
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		Log.w("majs", "GOT RESULT " + requestCode);
+		Log.w("majs", "GOT RESULT " + requestCode + " : " + resultCode);
+		if(requestCode == 10) {
+			//Delete request
+			if(resultCode == Activity.RESULT_OK) {
+				Log.w("majs", "SUCCESS!");
+
+				if(flickr == null) {
+					Log.w(LOG_TAG, "Getting flickr");
+					flickr = (FlickrFragment) getFragmentManager().findFragmentByTag("flickr");
+				}
+
+				if(flickr != null) {
+					flickr.setStatus("Deleted");
+					flickr.gotoNext();
+				}
+
+			}
+		}
 		if(requestCode == 1) {
+			if(data == null) {
+				Log.w(LOG_TAG, "Null dataptr!");
+				return;
+			}
 			Uri data2 = data.getData();
 			
 			if(flickr == null) {

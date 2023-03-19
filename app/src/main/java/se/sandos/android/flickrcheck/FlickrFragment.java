@@ -1,10 +1,15 @@
 package se.sandos.android.flickrcheck;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.security.MessageDigest;
+import java.util.Deque;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,16 +19,20 @@ import se.sandos.android.flickrcheck.json.PhotoSearch.Photos;
 import se.sandos.android.flickrcheck.json.PhotoSearch.Photos.Photo;
 import se.sandos.flickrcheck.R;
 import android.app.Fragment;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +43,7 @@ import android.widget.ImageView;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.VideoView;
+import android.content.ContentUris;
 
 public class FlickrFragment extends Fragment {
 	
@@ -54,7 +64,9 @@ public class FlickrFragment extends Fragment {
 	private VideoView remoteVideo;
 
 	private String location;
-	
+
+	private ArrayList<Uri> toDelete;
+
 	final AsyncTask<String, Integer, String> at = new AsyncTask<String, Integer, String>(){
 		@Override
 		protected String doInBackground(String... params) {
@@ -88,6 +100,7 @@ public class FlickrFragment extends Fragment {
 	public FlickrFragment() {
 		api = new FlickrApi();
 		skipped = new HashSet<File>();
+		toDelete = new ArrayList<Uri>();
 	}
 
 	public void setLocation(String location) {
@@ -155,18 +168,24 @@ public class FlickrFragment extends Fragment {
 					if(videos) {
 						ending = "mp4";
 					}
+					int numFiles = 0;
+					int totalFiles = 0;
 					for(File f : biggestFolder.listFiles()) {
-						if(!skipped.contains(f) && f.getName().endsWith(ending) && biggestSize < f.length()) {
-							biggestFile = f;
-							biggestSize = f.length();
-							Log.w(MainActivity.LOG_TAG, "New biggest file: " + f.getName() + "|" + f.length());
+						totalFiles++;
+						if(!skipped.contains(f) && f.getName().endsWith(ending)){
+							numFiles++;
+							if(biggestSize < f.length()) {
+								biggestFile = f;
+								biggestSize = f.length();
+								Log.w(MainActivity.LOG_TAG, "New biggest file: " + f.getName() + "|" + f.length());
+							}
 						}
 					}
 
 					if(biggestFile != null) {
 						final File f = biggestFile;
 
-						setStatus("File " + biggestFile.getName());
+						setStatus("File " + biggestFile.getName() + " Num:" + numFiles);
 						currentFile = biggestFile;
 						setSize(biggestSize);
 						
@@ -232,7 +251,7 @@ public class FlickrFragment extends Fragment {
 							return "";
 						}
 						
-						Photos search = api.search(n.substring(0, n.length()-4));
+						final Photos search = api.search(n.substring(0, n.length()-4));
 						digestMatch = false;
 						if(search != null && search.getTotal() > 0) {
 							String foundSha1 = "";
@@ -252,34 +271,84 @@ public class FlickrFragment extends Fragment {
 							Log.w("majs", "Digest stuff " + remotesha + "|" + digest);
 							
 							digest = null;
+							setStatus("Search found " + search.getTotal());
+							URL u = new URL(search.photo.get(0).baseUrl("_n"));
+
 							Thread digestThread = new Thread(new Runnable() {
 								@Override
 								public void run() {
 									FileInputStream fis = null;
+									String ourRemoteDigest = remotesha;
 									try {
+										int remoteTotal = 0;
+										ByteArrayOutputStream remoteFile = new ByteArrayOutputStream();
+										if(remotesha == null || remotesha.isEmpty()) {
+											final String origUrl = api.getOrigImgUrl(search.photo.get(0).getId());
+											InputStream is = new URL(origUrl).openConnection().getInputStream();
+											Log.w("majs", "Downloading file to compute digest! " + origUrl);
+											//We need to compute the hash manually
+											MessageDigest md = MessageDigest.getInstance("MD5");
+											byte[] buffer = new byte[1024*512];
+											int read;
+											while ((read = is.read(buffer)) != -1) {
+												remoteFile.write(buffer, 0, read);
+												md.update(buffer, 0, read);
+												remoteTotal += read;
+											}
+											byte[] sha1 = md.digest();
+											ourRemoteDigest = convertToHex(sha1);
+											Log.w("majs", "Downloaded file to compute digest! " + ourRemoteDigest + " Size: " + remoteTotal);
+										}
 										//Compute SHA1
+										byte[] remoteBytes = remoteFile.toByteArray();
 										Log.w("majs", "start hashing");
 										MessageDigest md = MessageDigest.getInstance("MD5");
 										fis = new FileInputStream(f);
-										byte[] buffer = new byte[1024*128];
+										byte[] buffer = new byte[1024*512];
 										int read;
-										while((read = fis.read(buffer)) != -1) {
+										int total = 0;
+										ArrayList<Integer> diff = new ArrayList<>(10000);
+										int totalDiff = 0;
+										while ((read = fis.read(buffer)) != -1) {
 											md.update(buffer, 0, read);
+											//Compare bytes
+											diff.clear();
+											for(int index =  total; index < total + read; index++){
+												if(remoteBytes[index] != buffer[index - total]) {
+													diff.add(index);
+													totalDiff++;
+//													Log.w("majs", "Diff " + index + " " + remoteBytes[index] + ":" + buffer[index-total]);
+												}
+											}
+											if(diff.size() > 0 ) {
+//												Log.w("majs", "Number of differing bytes: " + diff.size() + " Index: " + total);
+											}
+											total += read;
 										}
 										byte[] sha1 = md.digest();
 										Log.w("majs", "done hashing");
 										digest = convertToHex(sha1);
-										digestMatch = remotesha.equals(digest);
-										if(digestMatch) {
+										digestMatch = ourRemoteDigest.equals(digest);
+										Log.w("majs", "Digests: " + digest + "[" + total + "]:" + ourRemoteDigest + " [" + remoteTotal + "]");
+										if(!digestMatch && remoteTotal == total && totalDiff < 100) {
+											digestMatch = true;
+											Log.w("majs", "Setting match to true due to few diffing bytes: " + totalDiff);
+											setStatus("Setting match to true due to few diffing bytes: " + totalDiff);
+										} else {
+											Log.w("majs", "Not setting match: " + remoteTotal + " Local: " + total);
+										}
+										if (digestMatch) {
 											getActivity().runOnUiThread(new Runnable() {
 												@Override
 												public void run() {
 													Button deleteBtn = (Button) rootView.findViewById(R.id.deleteBtn);
-													if(digestMatch) {
+													if (digestMatch) {
 														deleteBtn.setBackgroundColor(0xff00dd00);
 													} else {
 														deleteBtn.setBackgroundResource(android.R.drawable.btn_default);
 													}
+
+													deleteBtn.callOnClick();
 												}
 											});
 										}
@@ -296,13 +365,10 @@ public class FlickrFragment extends Fragment {
 									}
 								}
 							});
-							
+
 							digestThread.setName("MD5 thread");
 							digestThread.setPriority(Thread.MIN_PRIORITY);
 							digestThread.start();
-
-							setStatus("Search found " + search.getTotal());
-							URL u = new URL(search.photo.get(0).baseUrl("_n"));
 
 							if(videos) {
 								final String videoUrl = api.getVideoUrl(search.photo.get(0).getId());
@@ -352,7 +418,12 @@ public class FlickrFragment extends Fragment {
 						} else {
 							if(api.invalidTokens()) {
 								setStatus("Tokens invalid");
-								at.execute("");
+								getActivity().runOnUiThread(new Runnable() {
+									@Override
+									public void run() {
+										at.execute("");
+									}
+								});
 							} else {
 								setStatus("Found none");
 
@@ -377,9 +448,10 @@ public class FlickrFragment extends Fragment {
 				}
 				
 			} catch (Exception e) {
-				Log.w("majs", "asdasd");
+				Log.w("majs", "Exception in FetchNextPhoto doInBackground");
 				Log.w("majs", e.getMessage());
-			} 
+				e.printStackTrace();
+			}
 			return null;
 		}
 		
@@ -397,7 +469,7 @@ public class FlickrFragment extends Fragment {
 	    return path;
 	}
 
-	private void setStatus(final String text) {
+	public void setStatus(final String text) {
 		if(status != null) {
 			getActivity().runOnUiThread(new Runnable() {
 				@Override
@@ -434,7 +506,21 @@ public class FlickrFragment extends Fragment {
 		img = (ImageView) rootView.findViewById(R.id.localImage);
 		img.setImageBitmap(null);
 	}
-	
+
+	public void gotoNext() {
+		ImageView img = rootView.findViewById(R.id.remoteImage);
+		img.setImageBitmap(null);
+
+		img = rootView.findViewById(R.id.localImage);
+		img.setImageBitmap(null);
+
+		new FetchNextPhoto().execute("");
+		final Button deleteBtn = (Button) rootView.findViewById(R.id.deleteBtn);
+		deleteBtn.setBackgroundResource(android.R.drawable.btn_default);
+
+		Log.w(MainActivity.LOG_TAG, "Went to next");
+	}
+
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -479,6 +565,112 @@ public class FlickrFragment extends Fragment {
 					clearImages(rootView);
 					new FetchNextPhoto().execute("");
 					deleteBtn.setBackgroundResource(android.R.drawable.btn_default);
+				} else {
+					Log.w(MainActivity.LOG_TAG, "Doing stuff to delete");
+					class Image {
+						private final Uri uri;
+						private final String name;
+						private final int width;
+						private final int height;
+						private final int size;
+
+						public Image(Uri uri, String name, int width, int height, int size) {
+							this.uri = uri;
+							this.name = name;
+							this.width = width;
+							this.height = height;
+							this.size = size;
+						}
+					}
+					List<Image> videoList = new ArrayList<Image>();
+
+					Uri collection;
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+						collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+					} else {
+						collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+					}
+					String[] projection = new String[] {
+							MediaStore.Images.Media._ID,
+							MediaStore.Images.Media.DISPLAY_NAME,
+							MediaStore.Images.Media.WIDTH,
+							MediaStore.Images.Media.HEIGHT,
+							MediaStore.Images.Media.SIZE
+					};
+					String selection = MediaStore.Images.Media.WIDTH +
+							" >= ?";
+					String[] args = new String[]{"300"};
+					String sortOrder = MediaStore.Images.Media.DISPLAY_NAME + " ASC";
+					try (Cursor cursor = getActivity().getApplicationContext().getContentResolver().query(
+							collection,
+							projection,
+							selection,
+							args,
+							sortOrder
+					)) {
+						// Cache column indices.
+						int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID);
+						int nameColumn =
+								cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME);
+						int widthColumn =
+								cursor.getColumnIndexOrThrow(MediaStore.Images.Media.WIDTH);
+						int heightColumn =
+								cursor.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT);
+						int sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE);
+
+						while (cursor.moveToNext()) {
+							// Get values of columns for a given video.
+							long id = cursor.getLong(idColumn);
+							String name = cursor.getString(nameColumn);
+							int width = cursor.getInt(widthColumn);
+							int height = cursor.getInt(heightColumn);
+							int size = cursor.getInt(sizeColumn);
+
+							Uri contentUri = ContentUris.withAppendedId(
+									MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+
+							// Stores column values and the contentUri in a local object
+							// that represents the media file.
+							videoList.add(new Image(contentUri, name, width, height, size));
+							//Log.w(MainActivity.LOG_TAG, "Image: " + name + " : " + size + ":" + contentUri);
+
+
+							if(currentFile.getName().contains(name)) {
+								Log.w(MainActivity.LOG_TAG, "Image: " + name + " : " + size + ":" + contentUri + " Uri: " + contentUri);
+
+								toDelete.add(contentUri);
+								if(toDelete.size() > 2) {
+									List<Uri> uris = new ArrayList<Uri>();
+									uris.add(contentUri);
+									PendingIntent deleteRequest = MediaStore.createDeleteRequest(getActivity().getContentResolver(), toDelete);
+									try {
+//									deleteRequest.send();
+										getActivity().startIntentSenderForResult(deleteRequest.getIntentSender(),
+												10,
+												null,
+												0,
+												0,
+												0);
+										//								getActivity().getApplicationContext().startActivity(deleteRequest);
+										Log.w(MainActivity.LOG_TAG, "Deleted");
+										toDelete.clear();
+									} catch (Exception e) {
+										Log.w(MainActivity.LOG_TAG, "Exce..." + e);
+										//getIntentSender().sendIntent(getActivity().getApplicationContext(), deleteRequest);
+									}
+									Log.w(MainActivity.LOG_TAG, "Done");
+								} else {
+									Log.w(MainActivity.LOG_TAG, "Only got this many to delete: " + toDelete.size());
+									skipped.add(currentFile);
+									gotoNext();
+									
+								}
+
+							}
+						}
+					}
+
+//					getActivity().getContentResolver().delete(Uri.fromFile(currentFile), null, null);
 				}
 			}
 		});

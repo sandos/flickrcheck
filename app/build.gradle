@@ -1,13 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion "29.0.3"
+    compileSdkVersion 33
 
     defaultConfig {
         applicationId "se.sandos.flickrcheck"
-        targetSdkVersion 19
-        minSdkVersion 17
+        targetSdkVersion 33
+        minSdkVersion 30
+    }
+
+    packagingOptions {
+        resources.excludes.add("META-INF/*")
     }
 
     buildTypes {
@@ -16,14 +19,19 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
+    namespace 'se.sandos.flickrcheck'
 }
 
 dependencies {
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    //implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    //implementation 'androidx.activity:activity:1.6.1'
     implementation files('libs/jackson-core-2.4.2-sources.jar')
     implementation files('libs/jackson-core-2.4.2.jar')
     implementation files('libs/jackson-jr-objects-2.4.2-sources.jar')
     implementation files('libs/jackson-jr-objects-2.4.2.jar')
-    implementation files('libs/signpost-commonshttp4-1.2.1.2.jar')
-    implementation files('libs/signpost-core-1.2.1.2.jar')
+    //implementation files('libs/signpost-commonshttp4-1.2.1.2.jar')
+    //implementation files('libs/signpost-core-1.2.1.2.jar')
+    implementation group: 'oauth.signpost', name: 'signpost-core', version: '2.1.1'
+    implementation group: 'oauth.signpost', name: 'signpost-commonshttp4', version: '2.1.1'
+    implementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
 }

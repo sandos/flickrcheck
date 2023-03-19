@@ -148,16 +148,37 @@ public class FlickrApi {
 		
 		StringBuffer input = logCall(conn, false);
 
-		
 		Sizes sizes = JSON.std.beanFrom(Sizes.class, input.toString().substring(14, input.length()-1));
+		Map<String, SizeLine> sizeLines = sizes.sizes.getSizeLines();
+		for(String key : sizeLines.keySet()) {
+			Log.w(LOG_TAG, key + "|" + sizeLines.get(key).source);
+		}
+		
+		return sizeLines.get("720p").source;
+	}
+	public String getOrigImgUrl(String photoid) throws IOException, OAuthMessageSignerException, OAuthExpectationFailedException, OAuthCommunicationException {
+		String u = "https://api.flickr.com/services/rest/?method=flickr.photos.getSizes&format=json&api_key=" + API_KEY +"&photo_id=" + photoid;
+		URL url = new URL(u);
+
+		URLConnection conn = url.openConnection();
+		sign(conn);
+
+		StringBuffer input = logCall(conn, false);
+
+
+		Sizes sizes = JSON.std.beanFrom(Sizes.class, input.toString().substring(14, input.length()-1));
+		if(sizes == null || sizes.sizes == null) {
+			Log.w(LOG_TAG, "No reply from sizes");
+			return null;
+		}
 		Map<String, SizeLine> sizeLines = sizes.sizes.getSizeLines();
 //		for(String key : sizeLines.keySet()) {
 //			Log.w(LOG_TAG, key + "|" + sizeLines.get(key).source);
 //		}
-		
-		return sizeLines.get("Site MP4").source;
+
+		return sizeLines.get("Original").source;
 	}
-	
+
 	private boolean success(StringBuffer sb) throws JSONObjectException, IOException {
 		try {
 			Stat res = JSON.std.beanFrom(Stat.class, sb.toString().substring(14, sb.length()-1));
